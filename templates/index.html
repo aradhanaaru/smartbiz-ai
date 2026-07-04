@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartBiz AI — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <span>SmartBiz AI</span>
+    </div>
+    <nav>
+      <button class="nav-item active" data-tab="dashboard">
+        <span class="icon">▦</span> Dashboard
+      </button>
+      <button class="nav-item" data-tab="addsale">
+        <span class="icon">＋</span> Add Sale
+      </button>
+      <button class="nav-item" data-tab="assistant">
+        <span class="icon">✎</span> Ask Assistant
+      </button>
+      <button class="nav-item" data-tab="reports">
+        <span class="icon">▤</span> Reports
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main>
+    <header class="topbar">
+      <div>
+        <div class="greeting">Good day, Boss!</div>
+        <div class="date" id="today-date"></div>
+      </div>
+    </header>
+
+    <!-- Dashboard -->
+    <section class="tab-panel" id="tab-dashboard">
+      <div class="receipt-card">
+        <div class="receipt-left">
+          <div class="receipt-label">TODAY'S TOTAL SALES</div>
+          <div class="receipt-total" id="total-sales">₹0</div>
+          <div class="receipt-sub" id="order-count-text">from 0 sales recorded today</div>
+        </div>
+        <div class="seal">GOOD<br>DAY</div>
+        <div class="perforation" id="perforation"></div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">Orders Today</div>
+          <div class="stat-value" id="orders-count">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-label">Top Product</div>
+          <div class="stat-value" id="top-product">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Est. Profit Today</div>
+          <div class="stat-value" id="est-profit">₹0</div>
+          <div class="stat-sub">~22% margin</div>
+        </div>
+      </div>
+
+      <div class="split-row">
+        <div class="card chart-card">
+          <div class="card-title">Sales overview</div>
+          <canvas id="salesChart" height="180"></canvas>
+        </div>
+        <div class="card list-card">
+          <div class="card-title">Recent sales</div>
+          <div class="recent-list" id="recent-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Add Sale -->
+    <section class="tab-panel hidden" id="tab-addsale">
+      <div class="split-row">
+        <form class="card form-card" id="sale-form">
+          <div class="card-title-lg">Record a sale</div>
+          <p class="card-sub">Fill this in after every sale — it takes 10 seconds.</p>
+
+          <label>
+            <span>Product name</span>
+            <input type="text" id="product-input" placeholder="e.g. Basmati Rice 5kg" required>
+          </label>
+
+          <div class="two-col">
+            <label>
+              <span>Quantity</span>
+              <input type="number" id="qty-input" min="1" value="1" required>
+            </label>
+            <label>
+              <span>Price per unit (₹)</span>
+              <input type="number" id="price-input" min="0" placeholder="0" required>
+            </label>
+          </div>
+
+          <div class="total-box">
+            <span>Total for this sale</span>
+            <span id="live-total">₹0</span>
+          </div>
+
+          <button type="submit" class="btn-primary">＋ Record sale</button>
+          <div class="confirm-msg hidden" id="confirm-msg">✓ Sale recorded successfully</div>
+        </form>
+
+        <div class="card list-card">
+          <div class="card-title-lg" id="entries-title">Today's entries (0)</div>
+          <div class="entries-list" id="entries-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Assistant -->
+    <section class="tab-panel hidden" id="tab-assistant">
+      <div class="card chat-card">
+        <div class="chat-header">
+          <div class="chat-icon">✦</div>
+          <span>Ask your assistant</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg assistant">Namaste! I'm your business assistant, powered by Gemini. Ask me anything about your sales, stock, or profits — in plain language.</div>
+        </div>
+        <div class="quick-questions" id="quick-questions">
+          <button class="chip">What sold best this week?</button>
+          <button class="chip">How much profit did I make today?</button>
+          <button class="chip">Which items are running low?</button>
+          <button class="chip">Compare today with yesterday</button>
+        </div>
+        <form class="chat-input-row" id="chat-form">
+          <input type="text" id="chat-input" placeholder="Type your question...">
+          <button type="submit">➤</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Reports -->
+    <section class="tab-panel hidden" id="tab-reports">
+      <div class="card">
+        <div class="card-title-lg">Sales by product</div>
+        <p class="card-sub">A quick look at where today's money came from.</p>
+        <canvas id="reportChart" height="140"></canvas>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Mobile bottom nav -->
+<div class="mobile-nav">
+  <button class="mnav-item active" data-tab="dashboard"><span>▦</span>Dashboard</button>
+  <button class="mnav-item" data-tab="addsale"><span>＋</span>Add Sale</button>
+  <button class="mnav-item" data-tab="assistant"><span>✎</span>Assistant</button>
+  <button class="mnav-item" data-tab="reports"><span>▤</span>Reports</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
