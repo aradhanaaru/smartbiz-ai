@@ -1,39 +1,31 @@
-# ============================================================
-# ADD THIS TO YOUR app.py
-# ============================================================
-# This assumes:
-#   - database.py already created smartbiz.db with table:
-#       sales(id, product, quantity, price)
-#   - ai.py has a function that talks to Gemini. Below I've
-#     guessed the name `ask_gemini(question)` — CHANGE THIS
-#     to match whatever function you actually wrote in ai.py.
-# ============================================================
-
+import os
 from flask import Flask, render_template, jsonify, request
-import sqlite3
-from ai import ask_gemini   # <-- change to your real function name in ai.py
+import psycopg2
+import psycopg2.extras
+from ai import ask_gemini
 
 app = Flask(__name__)
-DB_NAME = "smartbiz.db"
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
 def get_db():
-    conn = sqlite3.connect(DB_NAME)
-    conn.row_factory = sqlite3.Row  # lets us return rows as dicts
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
     return conn
 
 
-# ---------- Page route ----------
 @app.route("/")
 def dashboard():
     return render_template("index.html")
 
 
-# ---------- Sales API ----------
 @app.route("/api/sales", methods=["GET"])
 def get_sales():
     conn = get_db()
-    rows = conn.execute("SELECT * FROM sales ORDER BY id ASC").fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM sales ORDER BY id ASC")
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     return jsonify([dict(r) for r in rows])
 
@@ -42,11 +34,13 @@ def get_sales():
 def add_sale():
     data = request.get_json()
     conn = get_db()
-    conn.execute(
-        "INSERT INTO sales (product, quantity, price) VALUES (?, ?, ?)",
+    cur = conn.cursor()
+    cur.execute(
+        "INSERT INTO sales (product, quantity, price) VALUES (%s, %s, %s)",
         (data["product"], data["quantity"], data["price"]),
     )
     conn.commit()
+    cur.close()
     conn.close()
     return jsonify({"status": "ok"})
 
@@ -54,31 +48,31 @@ def add_sale():
 @app.route("/api/sales/<int:sale_id>", methods=["DELETE"])
 def delete_sale(sale_id):
     conn = get_db()
-    conn.execute("DELETE FROM sales WHERE id = ?", (sale_id,))
+    cur = conn.cursor()
+    cur.execute("DELETE FROM sales WHERE id = %s", (sale_id,))
     conn.commit()
+    cur.close()
     conn.close()
     return jsonify({"status": "deleted"})
 
 
-# ---------- Assistant API (Gemini) ----------
 @app.route("/api/ask", methods=["POST"])
 def ask_assistant():
     data = request.get_json()
     question = data.get("question", "")
 
-    # Give Gemini today's sales as context so it can actually answer
     conn = get_db()
-    rows = conn.execute("SELECT * FROM sales").fetchall()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM sales")
+    rows = cur.fetchall()
+    cur.close()
     conn.close()
     sales_context = [dict(r) for r in rows]
 
-    # CHANGE THIS LINE to match your ai.py function's real signature.
-    # If your function only takes a question (no context), use:
-    #   answer = ask_gemini(question)
     answer = ask_gemini(question, sales_context)
-
     return jsonify({"answer": answer})
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
