@@ -60,6 +60,7 @@ def delete_sale(sale_id):
 def ask_assistant():
     data = request.get_json()
     question = data.get("question", "")
+    language = data.get("language", "en")
 
     conn = get_db()
     cur = conn.cursor()
@@ -69,10 +70,5 @@ def ask_assistant():
     conn.close()
     sales_context = [dict(r) for r in rows]
 
-    answer = ask_gemini(question, sales_context)
+    answer = ask_gemini(question, sales_context, language)
     return jsonify({"answer": answer})
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)

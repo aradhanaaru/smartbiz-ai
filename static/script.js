@@ -1,20 +1,121 @@
 // ============================================================
-// SmartBiz AI — dashboard logic
-// Talks to your Flask backend via fetch().
-// Expected endpoints (add these to app.py — see the snippet
-// provided separately):
-//   GET  /api/sales            -> [{id, product, quantity, price}, ...]
-//   POST /api/sales            -> body {product, quantity, price}
-//   DELETE /api/sales/<id>     -> deletes one entry
-//   POST /api/ask              -> body {question}  ->  {answer}
+// SmartBiz AI — dashboard logic (with Tamil language support)
 // ============================================================
 
 let salesData = [];
 let salesChart, reportChart;
+let currentLang = localStorage.getItem("smartbiz_lang") || "en";
 
-document.getElementById("today-date").textContent = new Date().toLocaleDateString(
-  "en-IN", { weekday: "long", day: "numeric", month: "long" }
-);
+// ---------- Translations ----------
+const translations = {
+  en: {
+    dashboard_nav: "Dashboard",
+    add_sale_nav: "Add Sale",
+    assistant_nav: "Ask Assistant",
+    reports_nav: "Reports",
+    greeting: "Good day, Boss!",
+    today_total_label: "TODAY'S TOTAL SALES",
+    seal_text: "GOOD<br>DAY",
+    orders_today: "Orders Today",
+    top_product: "Top Product",
+    est_profit: "Est. Profit Today",
+    margin_note: "~22% margin",
+    sales_overview: "Sales overview",
+    recent_sales: "Recent sales",
+    record_sale_title: "Record a sale",
+    record_sale_sub: "Fill this in after every sale — it takes 10 seconds.",
+    product_name_label: "Product name",
+    product_placeholder: "e.g. Basmati Rice 5kg",
+    quantity_label: "Quantity",
+    price_label: "Price per unit (₹)",
+    total_label: "Total for this sale",
+    record_sale_btn: "＋ Record sale",
+    confirm_msg: "✓ Sale recorded successfully",
+    assistant_header: "Ask your assistant",
+    welcome_msg: "Namaste! I'm your business assistant, powered by Gemini. Ask me anything about your sales, stock, or profits — in plain language.",
+    q1: "What sold best this week?",
+    q2: "How much profit did I make today?",
+    q3: "Which items are running low?",
+    q4: "Compare today with yesterday",
+    chat_placeholder: "Type your question...",
+    reports_title: "Sales by product",
+    reports_sub: "A quick look at where today's money came from.",
+    no_entries: "No sales recorded yet today. Add your first one on the left.",
+    entries_title: "Today's entries",
+    couldnt_reach: "I couldn't reach the assistant. Check that your Flask server and Gemini API key are working.",
+  },
+  ta: {
+    dashboard_nav: "டாஷ்போர்டு",
+    add_sale_nav: "விற்பனை சேர்",
+    assistant_nav: "உதவியாளர்",
+    reports_nav: "அறிக்கைகள்",
+    greeting: "வணக்கம், முதலாளி!",
+    today_total_label: "இன்றைய மொத்த விற்பனை",
+    seal_text: "நல்ல<br>நாள்",
+    orders_today: "இன்றைய ஆர்டர்கள்",
+    top_product: "சிறந்த பொருள்",
+    est_profit: "இன்றைய மதிப்பு லாபம்",
+    margin_note: "~22% லாப வீதம்",
+    sales_overview: "விற்பனை கண்ணோட்டம்",
+    recent_sales: "சமீபத்திய விற்பனைகள்",
+    record_sale_title: "விற்பனையை பதிவு செய்யுங்கள்",
+    record_sale_sub: "ஒவ்வொரு விற்பனைக்குப் பிறகும் இதை நிரப்பவும் — 10 வினாடிகள் ஆகும்.",
+    product_name_label: "பொருளின் பெயர்",
+    product_placeholder: "எ.கா. பாஸ்மதி அரிசி 5 கிலோ",
+    quantity_label: "அளவு",
+    price_label: "ஒரு அலகுக்கான விலை (₹)",
+    total_label: "இந்த விற்பனைக்கான மொத்தம்",
+    record_sale_btn: "＋ விற்பனையை பதிவு செய்",
+    confirm_msg: "✓ விற்பனை வெற்றிகரமாக பதிவு செய்யப்பட்டது",
+    assistant_header: "உங்கள் உதவியாளரிடம் கேளுங்கள்",
+    welcome_msg: "வணக்கம்! நான் Gemini AI மூலம் இயங்கும் உங்கள் வணிக உதவியாளர். உங்கள் விற்பனை, இருப்பு, லாபம் பற்றி எதுவும் எளிய தமிழில் கேளுங்கள்.",
+    q1: "இந்த வாரம் எது சிறப்பாக விற்றது?",
+    q2: "இன்று நான் எவ்வளவு லாபம் ஈட்டினேன்?",
+    q3: "எந்த பொருட்கள் குறைவாக உள்ளன?",
+    q4: "இன்றையும் நேற்றையும் ஒப்பிடுக",
+    chat_placeholder: "உங்கள் கேள்வியை தட்டச்சு செய்யவும்...",
+    reports_title: "பொருள் வாரியான விற்பனை",
+    reports_sub: "இன்றைய பணம் எங்கிருந்து வந்தது என்பதைப் பார்வையிடவும்.",
+    no_entries: "இன்று இதுவரை விற்பனை பதிவு செய்யப்படவில்லை. இடதுபுறத்தில் முதலாவதைச் சேர்க்கவும்.",
+    entries_title: "இன்றைய பதிவுகள்",
+    couldnt_reach: "உதவியாளரை அணுக முடியவில்லை. உங்கள் Flask சேவையகம் மற்றும் Gemini API சரியாக இயங்குகிறதா எனச் சரிபார்க்கவும்.",
+  }
+};
+
+function t(key) {
+  return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+}
+
+function applyTranslations() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    el.innerHTML = t(key);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    el.setAttribute("placeholder", t(key));
+  });
+  document.body.classList.toggle("lang-ta", currentLang === "ta");
+  // re-render dynamic bits that aren't tagged
+  if (document.getElementById("entries-title")) renderEntries();
+  document.getElementById("today-date").textContent = new Date().toLocaleDateString(
+    currentLang === "ta" ? "ta-IN" : "en-IN",
+    { weekday: "long", day: "numeric", month: "long" }
+  );
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem("smartbiz_lang", lang);
+  document.querySelectorAll(".lang-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.lang === lang);
+  });
+  applyTranslations();
+}
+
+document.querySelectorAll(".lang-btn").forEach(btn => {
+  btn.addEventListener("click", () => setLanguage(btn.dataset.lang));
+});
 
 // ---------- Tab switching ----------
 function setActiveTab(tab) {
@@ -50,10 +151,11 @@ async function loadSales() {
 function renderDashboard() {
   const total = salesData.reduce((sum, s) => sum + s.quantity * s.price, 0);
   const orders = salesData.length;
-  const profit = Math.round(total * 0.22); // TODO: replace with real margin logic
+  const profit = Math.round(total * 0.22);
 
   document.getElementById("total-sales").textContent = currency(total);
-  document.getElementById("order-count-text").textContent = `from ${orders} sales recorded today`;
+  document.getElementById("order-count-text").textContent =
+    currentLang === "ta" ? `இன்று பதிவு செய்யப்பட்ட ${orders} விற்பனைகளிலிருந்து` : `from ${orders} sales recorded today`;
   document.getElementById("orders-count").textContent = orders;
   document.getElementById("est-profit").textContent = currency(profit);
 
@@ -62,7 +164,6 @@ function renderDashboard() {
   const top = Object.entries(byProduct).sort((a, b) => b[1] - a[1])[0];
   document.getElementById("top-product").textContent = top ? top[0] : "—";
 
-  // Recent list (last 8)
   const list = document.getElementById("recent-list");
   list.innerHTML = "";
   salesData.slice().reverse().slice(0, 8).forEach(s => {
@@ -80,7 +181,6 @@ function renderDashboard() {
     list.appendChild(row);
   });
 
-  // Chart: sales per product (simple bar chart from live data)
   const ctx = document.getElementById("salesChart");
   const labels = Object.keys(byProduct);
   const values = labels.map(l => byProduct[l] * (salesData.find(s => s.product === l)?.price || 0));
@@ -138,10 +238,10 @@ document.getElementById("sale-form").addEventListener("submit", async (e) => {
 
 function renderEntries() {
   const entriesList = document.getElementById("entries-list");
-  document.getElementById("entries-title").textContent = `Today's entries (${salesData.length})`;
+  document.getElementById("entries-title").textContent = `${t("entries_title")} (${salesData.length})`;
   entriesList.innerHTML = "";
   if (salesData.length === 0) {
-    entriesList.innerHTML = `<div class="card-sub">No sales recorded yet today. Add your first one on the left.</div>`;
+    entriesList.innerHTML = `<div class="card-sub">${t("no_entries")}</div>`;
     return;
   }
   salesData.slice().reverse().forEach(s => {
@@ -207,13 +307,13 @@ async function askAssistant(question) {
     const res = await fetch("/api/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question })
+      body: JSON.stringify({ question, language: currentLang })
     });
     const data = await res.json();
     addMessage("assistant", data.answer || "Sorry, I couldn't get an answer right now.");
   } catch (err) {
     console.error("Assistant error:", err);
-    addMessage("assistant", "I couldn't reach the assistant. Check that your Flask server and Gemini API key are working.");
+    addMessage("assistant", t("couldnt_reach"));
   }
 }
 
@@ -229,6 +329,42 @@ document.querySelectorAll(".chip").forEach(chip => {
   chip.addEventListener("click", () => askAssistant(chip.textContent));
 });
 
+// ---------- Voice input (Tamil / English) for Add Sale ----------
+const micBtn = document.getElementById("mic-btn");
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognitionAPI && micBtn) {
+  const recognition = new SpeechRecognitionAPI();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  micBtn.addEventListener("click", () => {
+    recognition.lang = currentLang === "ta" ? "ta-IN" : "en-IN";
+    micBtn.classList.add("listening");
+    micBtn.textContent = "●";
+    recognition.start();
+  });
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    productInput.value = transcript;
+  };
+
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
+  };
+
+  recognition.onend = () => {
+    micBtn.classList.remove("listening");
+    micBtn.textContent = "🎤";
+  };
+} else if (micBtn) {
+  micBtn.addEventListener("click", () => {
+    alert("Voice input isn't supported in this browser. Try Chrome on desktop or Android.");
+  });
+}
+
 // ---------- Init ----------
 updateLiveTotal();
+setLanguage(currentLang);
 loadSales();

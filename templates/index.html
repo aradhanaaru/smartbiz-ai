@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SmartBiz AI — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -19,25 +19,30 @@
     </div>
     <nav>
       <button class="nav-item active" data-tab="dashboard">
-        <span class="icon">▦</span> Dashboard
+        <span class="icon">▦</span> <span data-i18n="dashboard_nav">Dashboard</span>
       </button>
       <button class="nav-item" data-tab="addsale">
-        <span class="icon">＋</span> Add Sale
+        <span class="icon">＋</span> <span data-i18n="add_sale_nav">Add Sale</span>
       </button>
       <button class="nav-item" data-tab="assistant">
-        <span class="icon">✎</span> Ask Assistant
+        <span class="icon">✎</span> <span data-i18n="assistant_nav">Ask Assistant</span>
       </button>
       <button class="nav-item" data-tab="reports">
-        <span class="icon">▤</span> Reports
+        <span class="icon">▤</span> <span data-i18n="reports_nav">Reports</span>
       </button>
     </nav>
+
+    <div class="lang-toggle" id="lang-toggle">
+      <button class="lang-btn active" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ta">தமிழ்</button>
+    </div>
   </aside>
 
   <!-- Main -->
   <main>
     <header class="topbar">
       <div>
-        <div class="greeting">Good day, Boss!</div>
+        <div class="greeting" data-i18n="greeting">Good day, Boss!</div>
         <div class="date" id="today-date"></div>
       </div>
     </header>
@@ -46,40 +51,40 @@
     <section class="tab-panel" id="tab-dashboard">
       <div class="receipt-card">
         <div class="receipt-left">
-          <div class="receipt-label">TODAY'S TOTAL SALES</div>
+          <div class="receipt-label" data-i18n="today_total_label">TODAY'S TOTAL SALES</div>
           <div class="receipt-total" id="total-sales">₹0</div>
           <div class="receipt-sub" id="order-count-text">from 0 sales recorded today</div>
         </div>
-        <div class="seal">GOOD<br>DAY</div>
+        <div class="seal" data-i18n="seal_text">GOOD<br>DAY</div>
         <div class="perforation" id="perforation"></div>
       </div>
 
       <div class="stat-row">
         <div class="stat-card">
           <div class="stat-icon">📦</div>
-          <div class="stat-label">Orders Today</div>
+          <div class="stat-label" data-i18n="orders_today">Orders Today</div>
           <div class="stat-value" id="orders-count">0</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">📈</div>
-          <div class="stat-label">Top Product</div>
+          <div class="stat-label" data-i18n="top_product">Top Product</div>
           <div class="stat-value" id="top-product">—</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">💰</div>
-          <div class="stat-label">Est. Profit Today</div>
+          <div class="stat-label" data-i18n="est_profit">Est. Profit Today</div>
           <div class="stat-value" id="est-profit">₹0</div>
-          <div class="stat-sub">~22% margin</div>
+          <div class="stat-sub" data-i18n="margin_note">~22% margin</div>
         </div>
       </div>
 
       <div class="split-row">
         <div class="card chart-card">
-          <div class="card-title">Sales overview</div>
+          <div class="card-title" data-i18n="sales_overview">Sales overview</div>
           <canvas id="salesChart" height="180"></canvas>
         </div>
         <div class="card list-card">
-          <div class="card-title">Recent sales</div>
+          <div class="card-title" data-i18n="recent_sales">Recent sales</div>
           <div class="recent-list" id="recent-list"></div>
         </div>
       </div>
@@ -89,32 +94,35 @@
     <section class="tab-panel hidden" id="tab-addsale">
       <div class="split-row">
         <form class="card form-card" id="sale-form">
-          <div class="card-title-lg">Record a sale</div>
-          <p class="card-sub">Fill this in after every sale — it takes 10 seconds.</p>
+          <div class="card-title-lg" data-i18n="record_sale_title">Record a sale</div>
+          <p class="card-sub" data-i18n="record_sale_sub">Fill this in after every sale — it takes 10 seconds.</p>
 
           <label>
-            <span>Product name</span>
-            <input type="text" id="product-input" placeholder="e.g. Basmati Rice 5kg" required>
+            <span data-i18n="product_name_label">Product name</span>
+            <div class="input-with-mic">
+              <input type="text" id="product-input" data-i18n-placeholder="product_placeholder" placeholder="e.g. Basmati Rice 5kg" required>
+              <button type="button" class="mic-btn" id="mic-btn" title="Speak product name">🎤</button>
+            </div>
           </label>
 
           <div class="two-col">
             <label>
-              <span>Quantity</span>
+              <span data-i18n="quantity_label">Quantity</span>
               <input type="number" id="qty-input" min="1" value="1" required>
             </label>
             <label>
-              <span>Price per unit (₹)</span>
+              <span data-i18n="price_label">Price per unit (₹)</span>
               <input type="number" id="price-input" min="0" placeholder="0" required>
             </label>
           </div>
 
           <div class="total-box">
-            <span>Total for this sale</span>
+            <span data-i18n="total_label">Total for this sale</span>
             <span id="live-total">₹0</span>
           </div>
 
-          <button type="submit" class="btn-primary">＋ Record sale</button>
-          <div class="confirm-msg hidden" id="confirm-msg">✓ Sale recorded successfully</div>
+          <button type="submit" class="btn-primary" data-i18n="record_sale_btn">＋ Record sale</button>
+          <div class="confirm-msg hidden" id="confirm-msg" data-i18n="confirm_msg">✓ Sale recorded successfully</div>
         </form>
 
         <div class="card list-card">
@@ -129,19 +137,19 @@
       <div class="card chat-card">
         <div class="chat-header">
           <div class="chat-icon">✦</div>
-          <span>Ask your assistant</span>
+          <span data-i18n="assistant_header">Ask your assistant</span>
         </div>
         <div class="chat-messages" id="chat-messages">
-          <div class="msg assistant">Namaste! I'm your business assistant, powered by Gemini. Ask me anything about your sales, stock, or profits — in plain language.</div>
+          <div class="msg assistant" id="welcome-msg" data-i18n="welcome_msg">Namaste! I'm your business assistant, powered by Gemini. Ask me anything about your sales, stock, or profits — in plain language.</div>
         </div>
         <div class="quick-questions" id="quick-questions">
-          <button class="chip">What sold best this week?</button>
-          <button class="chip">How much profit did I make today?</button>
-          <button class="chip">Which items are running low?</button>
-          <button class="chip">Compare today with yesterday</button>
+          <button class="chip" data-i18n="q1">What sold best this week?</button>
+          <button class="chip" data-i18n="q2">How much profit did I make today?</button>
+          <button class="chip" data-i18n="q3">Which items are running low?</button>
+          <button class="chip" data-i18n="q4">Compare today with yesterday</button>
         </div>
         <form class="chat-input-row" id="chat-form">
-          <input type="text" id="chat-input" placeholder="Type your question...">
+          <input type="text" id="chat-input" data-i18n-placeholder="chat_placeholder" placeholder="Type your question...">
           <button type="submit">➤</button>
         </form>
       </div>
@@ -150,8 +158,8 @@
     <!-- Reports -->
     <section class="tab-panel hidden" id="tab-reports">
       <div class="card">
-        <div class="card-title-lg">Sales by product</div>
-        <p class="card-sub">A quick look at where today's money came from.</p>
+        <div class="card-title-lg" data-i18n="reports_title">Sales by product</div>
+        <p class="card-sub" data-i18n="reports_sub">A quick look at where today's money came from.</p>
         <canvas id="reportChart" height="140"></canvas>
       </div>
     </section>
@@ -160,10 +168,10 @@
 
 <!-- Mobile bottom nav -->
 <div class="mobile-nav">
-  <button class="mnav-item active" data-tab="dashboard"><span>▦</span>Dashboard</button>
-  <button class="mnav-item" data-tab="addsale"><span>＋</span>Add Sale</button>
-  <button class="mnav-item" data-tab="assistant"><span>✎</span>Assistant</button>
-  <button class="mnav-item" data-tab="reports"><span>▤</span>Reports</button>
+  <button class="mnav-item active" data-tab="dashboard"><span>▦</span><span data-i18n="dashboard_nav">Dashboard</span></button>
+  <button class="mnav-item" data-tab="addsale"><span>＋</span><span data-i18n="add_sale_nav">Add Sale</span></button>
+  <button class="mnav-item" data-tab="assistant"><span>✎</span><span data-i18n="assistant_nav">Ask Assistant</span></button>
+  <button class="mnav-item" data-tab="reports"><span>▤</span><span data-i18n="reports_nav">Reports</span></button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
