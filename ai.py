@@ -10,7 +10,7 @@ client = genai.Client(api_key=API_KEY)
 MODEL = "gemini-2.5-flash"
 
 
- def ask_gemini(question, sales_context=None, language="en"):
+def ask_gemini(question, sales_context=None, language="en"):
     context_text = ""
     if sales_context:
         context_text = "Here is today's sales data:\n"
